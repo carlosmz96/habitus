@@ -25,7 +25,7 @@ class HabitoService {
   // Método para listar todos los hábitos
   Future<List<Habito>> listarHabitos() async {
     final token = await obtenerToken();
-    print('Token obtenido: $token');
+
     // Decodifica el token
     final parts = token?.split('.');
     final payload = json.decode(
@@ -35,7 +35,6 @@ class HabitoService {
     // Extrae el ID
     final id = payload['id'];
 
-    print('ID del usuario: $id');
     final res = await http.get(
       Uri.parse('$baseUrl/usuario/$id'),
       headers: {
