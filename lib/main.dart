@@ -8,18 +8,23 @@ import 'package:habitus/screens/settings/ajustes_screen.dart';
 import 'package:habitus/screens/stats/estadisticas_screen.dart';
 import 'package:habitus/utils/token_utils.dart';
 
-void main() {
-  runApp(const HabitusApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final token = await obtenerToken();
+  final usuarioId = token != null ? obtenerUsuarioIdDesdeToken(token) : null;
+  runApp(HabitusApp(usuarioId: usuarioId));
 }
 
 class HabitusApp extends StatelessWidget {
-  const HabitusApp({super.key});
+  final String? usuarioId;
+
+  const HabitusApp({super.key, required this.usuarioId});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Habitus',
-      initialRoute: '/home',
+      initialRoute: usuarioId != null ? '/habitos' : '/login',
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/home':

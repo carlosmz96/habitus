@@ -3,24 +3,11 @@
 import 'dart:convert';
 
 import 'package:habitus/models/habito.dart';
+import 'package:habitus/utils/token_utils.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HabitoService {
   static const String baseUrl = 'http://localhost:8080/api/habitos';
-
-  // Método para obtener el token (ajusta según tu lógica)
-  Future<String?> obtenerToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('jwt_token');
-    if (token == null) {
-      print('Token no encontrado, redirigiendo a login');
-      // Aquí podrías redirigir al usuario a la pantalla de login
-      return null;
-    }
-
-    return token;
-  }
 
   // Método para listar todos los hábitos
   Future<List<Habito>> listarHabitos() async {
@@ -54,17 +41,8 @@ class HabitoService {
   // Método para crear un nuevo hábito
   Future<Habito> crearHabito(String nombre) async {
     final token = await obtenerToken();
+    final usuarioId = obtenerUsuarioIdDesdeToken(token!);
 
-    // Decodifica el token
-    final parts = token?.split('.');
-    final payload = json.decode(
-      utf8.decode(base64Url.decode(base64Url.normalize(parts![1]))),
-    );
-
-    // Extrae el IDW
-    final usuarioId = payload['id'];
-
-    print('usuarioId: $usuarioId');
     final res = await http.post(
       Uri.parse('$baseUrl/usuario/$usuarioId'),
       headers: {
@@ -76,7 +54,6 @@ class HabitoService {
 
     try {
       final decoded = json.decode(res.body);
-      print('Respuesta decodificada: $decoded');
       return Habito.fromJson(decoded);
     } catch (e) {
       print('Error parseando JSON: $e');
@@ -110,8 +87,10 @@ class HabitoService {
   // Método para marcar un hábito como completado
   Future<void> marcarComoHecho(int id) async {
     final token = await obtenerToken();
+    final usuarioId = obtenerUsuarioIdDesdeToken(token!);
+
     await http.post(
-      Uri.parse('$baseUrl/$id/completar'),
+      Uri.parse('$baseUrl/$id/completar/$usuarioId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -122,8 +101,10 @@ class HabitoService {
   // Método para eliminar un hábito
   Future<void> desmarcarComoHecho(int id) async {
     final token = await obtenerToken();
+    final usuarioId = obtenerUsuarioIdDesdeToken(token!);
+
     final res = await http.delete(
-      Uri.parse('$baseUrl/$id/cancelar'),
+      Uri.parse('$baseUrl/$id/cancelar/$usuarioId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
