@@ -188,9 +188,19 @@ class _HabitosSugeridosScreenState extends State<HabitosSugeridosScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: kPrimaryColor),
-              child: Text(
-                'Habitus',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+              child: Row(
+                children: [
+                  // Icon(Icons.bar_chart, color: kAccentColor, size: 32),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Habitus',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
             ListTile(

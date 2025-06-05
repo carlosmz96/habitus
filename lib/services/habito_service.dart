@@ -25,22 +25,49 @@ class HabitoService {
   // Método para listar todos los hábitos
   Future<List<Habito>> listarHabitos() async {
     final token = await obtenerToken();
+    print('Token obtenido: $token');
+    // Decodifica el token
+    final parts = token?.split('.');
+    final payload = json.decode(
+      utf8.decode(base64Url.decode(base64Url.normalize(parts![1]))),
+    );
+
+    // Extrae el ID
+    final id = payload['id'];
+
+    print('ID del usuario: $id');
     final res = await http.get(
-      Uri.parse(baseUrl),
+      Uri.parse('$baseUrl/usuario/$id'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
     );
-    final List jsonData = json.decode(res.body);
-    return jsonData.map((e) => Habito.fromJson(e)).toList();
+
+    if (res.statusCode == 200 && res.body.isNotEmpty) {
+      final List jsonData = json.decode(res.body);
+      return jsonData.map((e) => Habito.fromJson(e)).toList();
+    } else {
+      return []; // lista vacía sin error
+    }
   }
 
   // Método para crear un nuevo hábito
   Future<Habito> crearHabito(String nombre) async {
     final token = await obtenerToken();
+
+    // Decodifica el token
+    final parts = token?.split('.');
+    final payload = json.decode(
+      utf8.decode(base64Url.decode(base64Url.normalize(parts![1]))),
+    );
+
+    // Extrae el IDW
+    final usuarioId = payload['id'];
+
+    print('usuarioId: $usuarioId');
     final res = await http.post(
-      Uri.parse(baseUrl),
+      Uri.parse('$baseUrl/usuario/$usuarioId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -91,6 +118,19 @@ class HabitoService {
         'Content-Type': 'application/json',
       },
     );
+  }
+
+  // Método para eliminar un hábito
+  Future<void> desmarcarComoHecho(int id) async {
+    final token = await obtenerToken();
+    final res = await http.delete(
+      Uri.parse('$baseUrl/$id/cancelar'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (res.statusCode != 200) throw Exception('Error al desmarcar');
   }
 
   // Método para buscar hábitos por nombre

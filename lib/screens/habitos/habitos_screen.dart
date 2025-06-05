@@ -19,6 +19,7 @@ class _HabitosScreenState extends State<HabitosScreen> {
     _cargarHabitos();
   }
 
+  /// Carga la lista de hábitos desde el servicio y actualiza el estado.
   Future<void> _cargarHabitos() async {
     final lista = await _service.listarHabitos();
     setState(() {
@@ -26,6 +27,7 @@ class _HabitosScreenState extends State<HabitosScreen> {
     });
   }
 
+  /// Crea un nuevo hábito manualmente a través de un diálogo de texto.
   Future<void> _crearManual() async {
     final nombre = await _dialogoTexto();
     if (nombre != null && nombre.isNotEmpty) {
@@ -34,6 +36,7 @@ class _HabitosScreenState extends State<HabitosScreen> {
     }
   }
 
+  /// Muestra un diálogo para ingresar el nombre del nuevo hábito.
   Future<String?> _dialogoTexto() {
     final controller = TextEditingController();
     return showDialog<String>(
@@ -67,13 +70,27 @@ class _HabitosScreenState extends State<HabitosScreen> {
     );
   }
 
-  Future<void> _marcarComoHecho(Habito habito) async {
-    await _service.marcarComoHecho(habito.id!);
+  /// Cancela un hábito, eliminándolo de la lista y actualizando el estado.
+  Future<void> _marcarCancelar(int index) async {
+    final habito = _habitos[index];
+
+    bool nuevoEstado = !habito.completadoHoy;
+
+    if (nuevoEstado) {
+      await _service.marcarComoHecho(habito.id!);
+    } else {
+      await _service.desmarcarComoHecho(
+        habito.id!,
+      ); // <-- Asegúrate que este método exista
+    }
+
     setState(() {
-      habito.completadoHoy = true;
+      _habitos[index] = habito.copyWith(completadoHoy: nuevoEstado);
+      _habitos = [..._habitos]; // Fuerza rebuild
     });
   }
 
+  /// Añade un hábito sugerido a la lista de hábitos.
   void _addSugeridoToList() async {
     final habitoSugerido = await _service.obtenerSugerencia();
 
@@ -129,26 +146,35 @@ class _HabitosScreenState extends State<HabitosScreen> {
         foregroundColor: kAccentColor,
         title: const Text('Mis Hábitos'),
       ),
-      body: ListView.builder(
-        itemCount: _habitos.length,
-        itemBuilder: (_, i) => Theme(
-          data: Theme.of(context).copyWith(unselectedWidgetColor: kAccentColor),
-          child: CheckboxListTile(
-            checkColor: kPrimaryColor,
-            activeColor: kAccentColor,
-            title: Text(
-              _habitos[i].nombre,
-              style: TextStyle(color: kTextColor),
+      body: _habitos.isEmpty
+          ? Center(
+              child: Text(
+                '¿Aún sin hábitos? ¡Añade uno ahora!',
+                style: TextStyle(color: kTextColor, fontSize: 16),
+              ),
+            )
+          : ListView.builder(
+              itemCount: _habitos.length,
+              itemBuilder: (_, i) => Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(unselectedWidgetColor: kAccentColor),
+                child: CheckboxListTile(
+                  checkColor: kPrimaryColor,
+                  activeColor: kAccentColor,
+                  title: Text(
+                    _habitos[i].nombre,
+                    style: TextStyle(color: kTextColor),
+                  ),
+                  subtitle: _habitos[i].sugerido
+                      ? Text('Sugerido', style: TextStyle(color: kAccentColor))
+                      : null,
+                  value: _habitos[i].completadoHoy,
+                  onChanged: (_) => _marcarCancelar(i),
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+              ),
             ),
-            subtitle: _habitos[i].sugerido
-                ? Text('Sugerido', style: TextStyle(color: kAccentColor))
-                : null,
-            value: _habitos[i].completadoHoy,
-            onChanged: (_) => _marcarComoHecho(_habitos[i]),
-            controlAffinity: ListTileControlAffinity.leading,
-          ),
-        ),
-      ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -178,9 +204,19 @@ class _HabitosScreenState extends State<HabitosScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(color: kPrimaryColor),
-              child: Text(
-                'Habitus',
-                style: TextStyle(color: kAccentColor, fontSize: 24),
+              child: Row(
+                children: [
+                  // Icon(Icons.bar_chart, color: kAccentColor, size: 32),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Habitus',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
             _drawerItem('Mis hábitos', '/habitos', kAccentColor, Icons.list),

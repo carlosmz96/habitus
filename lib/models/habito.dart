@@ -28,4 +28,18 @@ class Habito {
       'completadoHoy': completadoHoy,
     };
   }
+
+  Habito copyWith({
+    int? id,
+    String? nombre,
+    bool? sugerido,
+    bool? completadoHoy,
+  }) {
+    return Habito(
+      id: id ?? this.id,
+      nombre: nombre ?? this.nombre,
+      sugerido: sugerido ?? this.sugerido,
+      completadoHoy: completadoHoy ?? this.completadoHoy,
+    );
+  }
 }

@@ -21,7 +21,7 @@ class AjustesScreen extends StatelessWidget {
               decoration: BoxDecoration(color: kPrimaryColor),
               child: Row(
                 children: [
-                  Icon(Icons.settings, color: kAccentColor, size: 32),
+                  // Icon(Icons.settings, color: kAccentColor, size: 32),
                   const SizedBox(width: 12),
                   Text(
                     'Habitus',
